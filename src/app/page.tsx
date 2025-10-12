@@ -1,4 +1,5 @@
 import { FaucetClaim } from "@/components/FaucetClaim";
+import Link from "next/link";
 
 export default function Home() {
   return (
@@ -30,13 +31,16 @@ export default function Home() {
                 Claim 10,000 LOVE tokens every hour from the faucet
               </p>
             </div>
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 text-center">
-              <div className="text-3xl mb-2">🎭</div>
-              <h3 className="font-bold mb-2">Mint Characters</h3>
-              <p className="text-sm text-gray-600 dark:text-gray-400">
-                Create unique AI-powered NFT characters (Coming Soon)
-              </p>
-            </div>
+            <Link href="/mint" className="block">
+              <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 text-center hover:shadow-lg transition cursor-pointer">
+                <div className="text-3xl mb-2">🎭</div>
+                <h3 className="font-bold mb-2">Mint Characters</h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  Create unique AI-powered NFT characters
+                </p>
+                <p className="text-sm text-pink-500 font-semibold mt-2">Mint Now →</p>
+              </div>
+            </Link>
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 text-center">
               <div className="text-3xl mb-2">🎁</div>
               <h3 className="font-bold mb-2">Send Gifts</h3>
