@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt } from "wagmi";
-import { formatEther } from "viem";
-import { useWalletClient } from "wagmi";
+import { formatEther, decodeEventLog } from "viem";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
   LOVE_TOKEN_ADDRESS,
@@ -17,12 +17,12 @@ import {
 
 export function MintCharacter() {
   const { address, isConnected } = useAccount();
-  const { data: walletClient } = useWalletClient();
+  const router = useRouter();
   const [characterName, setCharacterName] = useState("");
   const [gender, setGender] = useState<number>(Gender.Female);
   const [sexualOrientation, setSexualOrientation] = useState<number>(SexualOrientation.Straight);
   const [isApproving, setIsApproving] = useState(false);
-  const [tokenAdded, setTokenAdded] = useState(false);
+  const [mintedTokenId, setMintedTokenId] = useState<number | null>(null);
 
   // Read LOVE balance
   const { data: balance, refetch: refetchBalance } = useReadContract({
@@ -55,6 +55,13 @@ export function MintCharacter() {
     args: address ? [address] : undefined,
   });
 
+  // Read total supply (for display purposes)
+  const { refetch: refetchTotalSupply } = useReadContract({
+    address: CHARACTER_NFT_ADDRESS,
+    abi: CHARACTER_NFT_ABI,
+    functionName: "totalSupply",
+  });
+
   // Approve contract
   const {
     writeContract: approveContract,
@@ -78,6 +85,7 @@ export function MintCharacter() {
   } = useWriteContract();
 
   const {
+    data: mintReceipt,
     isLoading: isMintConfirming,
     isSuccess: isMintSuccess,
     isError: isMintError,
@@ -111,6 +119,42 @@ export function MintCharacter() {
     console.log("nftBalance:", nftBalance?.toString());
   }, [balance, allowance, mintCost, nftBalance]);
 
+  // Parse tokenId from mint transaction receipt
+  useEffect(() => {
+    if (isMintSuccess && mintReceipt) {
+      console.log("=== MINT SUCCESS - PARSING TOKEN ID ===");
+      console.log("Receipt logs:", mintReceipt.logs);
+
+      try {
+        // Find the CharacterMinted event log
+        for (const log of mintReceipt.logs) {
+          try {
+            const decodedLog = decodeEventLog({
+              abi: CHARACTER_NFT_ABI,
+              data: log.data,
+              topics: log.topics,
+            });
+
+            console.log("Decoded log:", decodedLog);
+
+            // Check if this is the CharacterMinted event
+            if (decodedLog.eventName === "CharacterMinted") {
+              const tokenId = Number(decodedLog.args.tokenId);
+              console.log("Found minted tokenId:", tokenId);
+              setMintedTokenId(tokenId);
+              break;
+            }
+          } catch (_e) {
+            // Skip logs that don't match our ABI
+            continue;
+          }
+        }
+      } catch (error) {
+        console.error("Error parsing mint receipt:", error);
+      }
+    }
+  }, [isMintSuccess, mintReceipt]);
+
   // Refetch balances when mint succeeds
   useEffect(() => {
     if (isMintSuccess) {
@@ -120,10 +164,24 @@ export function MintCharacter() {
         refetchBalance();
         refetchNftBalance();
         refetchAllowance();
+        refetchTotalSupply();
         console.log("Data refetch triggered");
       }, 2000);
     }
-  }, [isMintSuccess, refetchBalance, refetchNftBalance, refetchAllowance]);
+  }, [isMintSuccess, refetchBalance, refetchNftBalance, refetchAllowance, refetchTotalSupply]);
+
+  // Auto-redirect to character page after mint succeeds
+  useEffect(() => {
+    if (isMintSuccess && mintedTokenId !== null) {
+      console.log("=== REDIRECTING TO CHARACTER PAGE ===");
+      console.log("Minted token ID:", mintedTokenId);
+
+      // Wait 3 seconds to show success message, then redirect
+      setTimeout(() => {
+        router.push(`/character/${mintedTokenId}`);
+      }, 3000);
+    }
+  }, [isMintSuccess, mintedTokenId, router]);
 
   // Auto-mint after approval succeeds
   useEffect(() => {
@@ -159,7 +217,7 @@ export function MintCharacter() {
         address: LOVE_TOKEN_ADDRESS,
         abi: LOVE_TOKEN_ABI,
         functionName: "approve",
-        args: [CHARACTER_NFT_ADDRESS, mintCost], // Approve only the mint cost (100 LOVE)
+        args: [CHARACTER_NFT_ADDRESS, mintCost], // Approve exactly 100 LOVE
       });
       console.log("approveContract called successfully");
     } catch (error) {
@@ -197,26 +255,6 @@ export function MintCharacter() {
       console.error("Mint error:", error);
     }
     console.log("=== MINT FINISHED ===");
-  };
-
-  const addTokenToWallet = async () => {
-    if (!walletClient) return;
-
-    try {
-      const success = await walletClient.watchAsset({
-        type: 'ERC20',
-        options: {
-          address: LOVE_TOKEN_ADDRESS,
-          symbol: 'LOVE',
-          decimals: 18,
-        },
-      });
-      if (success) {
-        setTokenAdded(true);
-      }
-    } catch (error) {
-      console.error("Error adding token:", error);
-    }
   };
 
   const needsApproval = !allowance || (mintCost && allowance < mintCost);
@@ -257,21 +295,10 @@ export function MintCharacter() {
           <span className="text-sm text-gray-600 dark:text-gray-400">Mint Cost:</span>
           <span className="font-semibold">{mintCost ? formatEther(mintCost) : "100"} LOVE</span>
         </div>
-        <div className="flex justify-between items-center mb-2">
+        <div className="flex justify-between items-center">
           <span className="text-sm text-gray-600 dark:text-gray-400">Your Characters:</span>
           <span className="font-semibold">{nftBalance?.toString() || "0"} NFTs</span>
         </div>
-        <button
-          onClick={addTokenToWallet}
-          disabled={tokenAdded}
-          className={`w-full mt-2 text-sm font-medium transition ${
-            tokenAdded
-              ? "text-green-600 dark:text-green-400 cursor-default"
-              : "text-pink-500 hover:text-pink-600"
-          }`}
-        >
-          {tokenAdded ? "✓ LOVE token added to wallet" : "+ Add LOVE token to wallet"}
-        </button>
       </div>
 
       {/* Character Name Input */}
@@ -357,14 +384,6 @@ export function MintCharacter() {
         </div>
       ) : (
         <>
-          {!tokenAdded && needsApproval && (
-            <div className="mb-4 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
-              <p className="text-blue-800 dark:text-blue-200 text-sm">
-                💡 <strong>Tip:</strong> Add LOVE token to your wallet first (button above) so MetaMask can display &quot;100 LOVE&quot; instead of the contract address when approving.
-              </p>
-            </div>
-          )}
-
           {isApproveSuccess && !isMintPending && !isMintConfirming && !isMintSuccess && (
             <div className="mb-4 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
               <p className="text-blue-800 dark:text-blue-200 text-sm">
@@ -397,14 +416,20 @@ export function MintCharacter() {
       )}
 
       {/* Success Message */}
-      {isMintSuccess && (
+      {isMintSuccess && mintedTokenId !== null && (
         <div className="mt-4 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
           <p className="text-green-800 dark:text-green-200 font-semibold">
             🎉 Character minted successfully!
           </p>
-          <p className="text-sm text-green-700 dark:text-green-300 mt-1">
-            Your character has been created. Check your wallet for the NFT!
+          <p className="text-sm text-green-700 dark:text-green-300 mt-2">
+            Redirecting to your character page...
           </p>
+          <Link
+            href={`/character/${mintedTokenId}`}
+            className="mt-3 block w-full text-center bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-lg transition"
+          >
+            View Character #{mintedTokenId} Now →
+          </Link>
         </div>
       )}
 

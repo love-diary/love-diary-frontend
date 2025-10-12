@@ -1,4 +1,5 @@
 import { FaucetClaim } from "@/components/FaucetClaim";
+import { CharacterList } from "@/components/CharacterList";
 import Link from "next/link";
 
 export default function Home() {
@@ -20,6 +21,11 @@ export default function Home() {
 
         {/* Faucet Component */}
         <FaucetClaim />
+
+        {/* Character List */}
+        <div className="mt-12 max-w-2xl mx-auto">
+          <CharacterList />
+        </div>
 
         {/* Info Section */}
         <div className="mt-16 max-w-2xl mx-auto">

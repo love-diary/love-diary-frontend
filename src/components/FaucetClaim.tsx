@@ -11,7 +11,7 @@ export function FaucetClaim() {
   const [timeUntilClaim, setTimeUntilClaim] = useState<number>(0);
 
   // Read LOVE token balance
-  const { data: balance } = useReadContract({
+  const { data: balance, isLoading: isLoadingBalance } = useReadContract({
     address: LOVE_TOKEN_ADDRESS,
     abi: LOVE_TOKEN_ABI,
     functionName: 'balanceOf',
@@ -22,7 +22,7 @@ export function FaucetClaim() {
   });
 
   // Check if user can claim
-  const { data: canClaim } = useReadContract({
+  const { data: canClaim, isLoading: isLoadingCanClaim } = useReadContract({
     address: FAUCET_ADDRESS,
     abi: FAUCET_ABI,
     functionName: 'canClaim',
@@ -111,9 +111,15 @@ export function FaucetClaim() {
           <div className="w-full bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
             <div className="text-center">
               <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">Your LOVE Balance</p>
-              <p className="text-4xl font-bold text-pink-500">
-                {balance ? formatUnits(balance as bigint, 18) : '0'} LOVE
-              </p>
+              {isLoadingBalance ? (
+                <p className="text-4xl font-bold text-gray-400">
+                  Loading...
+                </p>
+              ) : (
+                <p className="text-4xl font-bold text-pink-500">
+                  {balance ? formatUnits(balance as bigint, 18) : '0'} LOVE
+                </p>
+              )}
             </div>
           </div>
 
@@ -124,7 +130,17 @@ export function FaucetClaim() {
               Claim 10,000 LOVE tokens every hour
             </p>
 
-            {canClaim ? (
+            {isLoadingCanClaim ? (
+              <div className="text-center">
+                <p className="text-gray-400 mb-4">Loading claim status...</p>
+                <button
+                  disabled
+                  className="w-full bg-gray-400 text-white font-bold py-3 px-6 rounded-lg cursor-not-allowed"
+                >
+                  Loading...
+                </button>
+              </div>
+            ) : canClaim ? (
               <button
                 onClick={handleClaim}
                 disabled={isPending || isConfirming}
