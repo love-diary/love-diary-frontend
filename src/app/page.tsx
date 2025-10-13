@@ -1,5 +1,6 @@
 import { FaucetClaim } from "@/components/FaucetClaim";
 import { CharacterList } from "@/components/CharacterList";
+import { GettingStarted } from "@/components/GettingStarted";
 import Link from "next/link";
 
 export default function Home() {
@@ -18,6 +19,9 @@ export default function Home() {
             Claim your LOVE tokens to start your journey
           </p>
         </div>
+
+        {/* Getting Started Instructions */}
+        <GettingStarted />
 
         {/* Faucet Component */}
         <FaucetClaim />
@@ -47,13 +51,16 @@ export default function Home() {
                 <p className="text-sm text-pink-500 font-semibold mt-2">Mint Now →</p>
               </div>
             </Link>
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 text-center">
-              <div className="text-3xl mb-2">🎁</div>
-              <h3 className="font-bold mb-2">Send Gifts</h3>
-              <p className="text-sm text-gray-600 dark:text-gray-400">
-                Use LOVE tokens to build relationships (Coming Soon)
-              </p>
-            </div>
+            <a href="/love-diary-whitepaper.pdf" target="_blank" rel="noopener noreferrer" className="block">
+              <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 text-center hover:shadow-lg transition cursor-pointer">
+                <div className="text-3xl mb-2">📄</div>
+                <h3 className="font-bold mb-2">Whitepaper</h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  Learn about Love Diary's innovations
+                </p>
+                <p className="text-sm text-pink-500 font-semibold mt-2">Read Now →</p>
+              </div>
+            </a>
           </div>
         </div>
       </main>
