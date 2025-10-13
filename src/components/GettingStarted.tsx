@@ -44,7 +44,7 @@ export function GettingStarted() {
             </h3>
             <ol className="list-decimal list-inside space-y-2 ml-2">
               <li>Open MetaMask and click the network dropdown at the top</li>
-              <li>Click "Add Network" or "Add a network manually"</li>
+              <li>Click &quot;Add Network&quot; or &quot;Add a network manually&quot;</li>
               <li>
                 Enter the following details:
                 <div className="mt-2 ml-6 bg-white dark:bg-gray-800 p-3 rounded border border-gray-200 dark:border-gray-700 text-sm font-mono">
@@ -65,7 +65,7 @@ export function GettingStarted() {
                   </div>
                 </div>
               </li>
-              <li>Click "Save" and switch to the Base Sepolia network</li>
+              <li>Click &quot;Save&quot; and switch to the Base Sepolia network</li>
             </ol>
           </div>
           <div>

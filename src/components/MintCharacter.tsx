@@ -144,7 +144,7 @@ export function MintCharacter() {
               setMintedTokenId(tokenId);
               break;
             }
-          } catch (_e) {
+          } catch {
             // Skip logs that don't match our ABI
             continue;
           }
@@ -196,6 +196,7 @@ export function MintCharacter() {
         handleMint();
       }, 2000);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isApproveSuccess]); // Only depend on isApproveSuccess to avoid infinite loops
 
   const handleApprove = async () => {
@@ -259,7 +260,6 @@ export function MintCharacter() {
 
   const needsApproval = !allowance || (mintCost && allowance < mintCost);
   const hasEnoughBalance = balance && mintCost && balance >= mintCost;
-  const canMint = isConnected && hasEnoughBalance && !needsApproval && characterName.trim().length > 0;
 
   if (!isConnected) {
     return (

@@ -56,7 +56,7 @@ export default function Home() {
                 <div className="text-3xl mb-2">📄</div>
                 <h3 className="font-bold mb-2">Whitepaper</h3>
                 <p className="text-sm text-gray-600 dark:text-gray-400">
-                  Learn about Love Diary's innovations
+                  Learn about Love Diary&apos;s innovations
                 </p>
                 <p className="text-sm text-pink-500 font-semibold mt-2">Read Now →</p>
               </div>
