@@ -37,7 +37,7 @@ export default function MintPage() {
               <div className="text-3xl mb-4 text-center">2️⃣</div>
               <h3 className="font-bold mb-2 text-center">Random Traits</h3>
               <p className="text-sm text-gray-600 dark:text-gray-400 text-center">
-                Birth year, occupation, and personality are randomly generated on-chain
+                Birth date, occupation, and personality are randomly generated on-chain
               </p>
             </div>
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">

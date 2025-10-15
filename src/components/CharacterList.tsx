@@ -12,7 +12,8 @@ interface CharacterData {
   gender: number;
   occupationId: number;
   personalityId: number;
-  birthYear: number;
+  birthTimestamp: number;
+  isBonded: boolean;
 }
 
 export function CharacterList() {
@@ -78,7 +79,8 @@ export function CharacterList() {
                 gender: character.gender,
                 occupationId: character.occupationId,
                 personalityId: character.personalityId,
-                birthYear: Number(character.birthYear),
+                birthTimestamp: Number(character.birthTimestamp),
+                isBonded: character.isBonded,
               });
             }
           } catch (error) {
@@ -195,8 +197,14 @@ export function CharacterList() {
                     <span className="font-medium">{getPersonalityName(character.personalityId, locale)}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-600 dark:text-gray-400">Birth Year:</span>
-                    <span className="font-medium">{character.birthYear}</span>
+                    <span className="text-gray-600 dark:text-gray-400">Birth Date:</span>
+                    <span className="font-medium">
+                      {new Date(character.birthTimestamp * 1000).toLocaleDateString(locale, {
+                        year: 'numeric',
+                        month: 'short',
+                        day: 'numeric'
+                      })}
+                    </span>
                   </div>
                 </div>
                 <div className="mt-3 text-center text-xs text-pink-500 font-semibold">

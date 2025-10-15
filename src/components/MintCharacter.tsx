@@ -19,7 +19,7 @@ export function MintCharacter() {
   const { address, isConnected } = useAccount();
   const router = useRouter();
   const [characterName, setCharacterName] = useState("");
-  const [gender, setGender] = useState<number>(Gender.Female);
+  const [gender, setGender] = useState<number>(Gender.Male);
   const [sexualOrientation, setSexualOrientation] = useState<number>(SexualOrientation.Straight);
   const [isApproving, setIsApproving] = useState(false);
   const [mintedTokenId, setMintedTokenId] = useState<number | null>(null);
@@ -364,7 +364,9 @@ export function MintCharacter() {
                    focus:ring-2 focus:ring-pink-500 focus:border-transparent"
         >
           <option value={SexualOrientation.Straight}>Straight</option>
-          <option value={SexualOrientation.SameGender}>Same Gender</option>
+          <option value={SexualOrientation.SameGender}>
+            {gender === Gender.Male ? "Gay" : gender === Gender.Female ? "Lesbian" : "Gay / Lesbian"}
+          </option>
           <option value={SexualOrientation.Bisexual}>Bisexual</option>
           <option value={SexualOrientation.Pansexual}>Pansexual</option>
           <option value={SexualOrientation.Asexual}>Asexual</option>
@@ -384,14 +386,6 @@ export function MintCharacter() {
         </div>
       ) : (
         <>
-          {isApproveSuccess && !isMintPending && !isMintConfirming && !isMintSuccess && (
-            <div className="mb-4 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
-              <p className="text-blue-800 dark:text-blue-200 text-sm">
-                ⏳ Approval successful! Starting mint transaction...
-              </p>
-            </div>
-          )}
-
           <button
             onClick={needsApproval ? handleApprove : handleMint}
             disabled={
@@ -406,12 +400,21 @@ export function MintCharacter() {
             className="w-full bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600
                      disabled:from-gray-400 disabled:to-gray-400 text-white font-semibold py-3 px-6 rounded-lg transition"
           >
-            {isApprovePending || isApproveConfirming
-              ? "Approving 100 LOVE..."
-              : isMintPending || isMintConfirming
+            {isApprovePending || isApproveConfirming || isMintPending || isMintConfirming
               ? "Minting Character..."
               : "Mint Character (100 LOVE)"}
           </button>
+
+          {/* Show progress message during the minting process */}
+          {(isApprovePending || isApproveConfirming || isMintPending || isMintConfirming) && (
+            <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+              <p className="text-blue-800 dark:text-blue-200 text-sm text-center">
+                {isApprovePending || isApproveConfirming
+                  ? "⏳ Please confirm both transactions in your wallet..."
+                  : "⏳ Finalizing your character NFT..."}
+              </p>
+            </div>
+          )}
         </>
       )}
 
@@ -460,7 +463,7 @@ export function MintCharacter() {
       {/* Info */}
       <div className="mt-6 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
         <p className="text-blue-800 dark:text-blue-200 text-sm">
-          ℹ️ Random traits (birth year, occupation, personality) will be generated on-chain when you mint.
+          ℹ️ Random traits (birth date, occupation, personality) will be generated on-chain when you mint.
         </p>
       </div>
     </div>

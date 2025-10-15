@@ -145,13 +145,15 @@ export const CHARACTER_NFT_ABI = [
       {
         "components": [
           { "internalType": "string", "name": "name", "type": "string" },
-          { "internalType": "uint16", "name": "birthYear", "type": "uint16" },
+          { "internalType": "uint32", "name": "birthTimestamp", "type": "uint32" },
           { "internalType": "uint8", "name": "gender", "type": "uint8" },
           { "internalType": "uint8", "name": "sexualOrientation", "type": "uint8" },
           { "internalType": "uint8", "name": "occupationId", "type": "uint8" },
           { "internalType": "uint8", "name": "personalityId", "type": "uint8" },
           { "internalType": "uint8", "name": "language", "type": "uint8" },
-          { "internalType": "uint256", "name": "mintedAt", "type": "uint256" }
+          { "internalType": "uint256", "name": "mintedAt", "type": "uint256" },
+          { "internalType": "bool", "name": "isBonded", "type": "bool" },
+          { "internalType": "bytes32", "name": "secret", "type": "bytes32" }
         ],
         "internalType": "struct CharacterNFT.Character",
         "name": "",
@@ -179,6 +181,20 @@ export const CHARACTER_NFT_ABI = [
     "inputs": [{ "internalType": "uint256", "name": "tokenId", "type": "uint256" }],
     "name": "ownerOf",
     "outputs": [{ "internalType": "address", "name": "", "type": "address" }],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [{ "internalType": "uint256", "name": "tokenId", "type": "uint256" }],
+    "name": "bond",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [{ "internalType": "uint256", "name": "tokenId", "type": "uint256" }],
+    "name": "isBonded",
+    "outputs": [{ "internalType": "bool", "name": "", "type": "bool" }],
     "stateMutability": "view",
     "type": "function"
   },

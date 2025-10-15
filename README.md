@@ -52,8 +52,8 @@ Create a `.env.local` file:
 NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID=16c7e7bee508f859fe612014c91f253d
 
 # Contract Addresses (Base Sepolia)
-NEXT_PUBLIC_LOVE_TOKEN_ADDRESS=0xf614a36b715a1f00bc9450d113d4eefeb0dd6396
-NEXT_PUBLIC_FAUCET_ADDRESS=0xF09177Bb77d64084457cE2D7D51A4A28Bce00B84
+NEXT_PUBLIC_LOVE_TOKEN_ADDRESS=0x2e19274a399F5510e185b61f78D8eDFFccc05d88
+NEXT_PUBLIC_FAUCET_ADDRESS=0x14C5Aa3F8b0fE5D7792E57D6ace8bA2e0c852b31
 
 # Optional
 NEXT_PUBLIC_ENABLE_TESTNETS=true
@@ -103,11 +103,14 @@ love-diary-frontend/
 
 ## Deployed Contracts (Base Sepolia)
 
-- **LoveToken**: `0xf614a36b715a1f00bc9450d113d4eefeb0dd6396`
-  - [View on Basescan](https://sepolia.basescan.org/address/0xf614a36b715a1f00bc9450d113d4eefeb0dd6396)
+- **LoveToken**: `0x2e19274a399F5510e185b61f78D8eDFFccc05d88`
+- **LoveTokenFaucet**: `0x14C5Aa3F8b0fE5D7792E57D6ace8bA2e0c852b31`
+- **CharacterNFT**: `0x93Fa2e1aB3D639F8005e94b65350FE34Cd894f08`
 
-- **LoveTokenFaucet**: `0xF09177Bb77d64084457cE2D7D51A4A28Bce00B84`
-  - [View on Basescan](https://sepolia.basescan.org/address/0xF09177Bb77d64084457cE2D7D51A4A28Bce00B84)
+View on Basescan:
+- [LoveToken](https://sepolia.basescan.org/address/0x2e19274a399F5510e185b61f78D8eDFFccc05d88)
+- [LoveTokenFaucet](https://sepolia.basescan.org/address/0x14C5Aa3F8b0fE5D7792E57D6ace8bA2e0c852b31)
+- [CharacterNFT](https://sepolia.basescan.org/address/0x93Fa2e1aB3D639F8005e94b65350FE34Cd894f08)
 
 ## Development
 
