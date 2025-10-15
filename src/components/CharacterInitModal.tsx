@@ -200,9 +200,9 @@ export function CharacterInitModal({
                 <h5 className="font-semibold text-sm mb-2 text-purple-600 dark:text-purple-400">
                   Backstory Summary
                 </h5>
-                <p className="text-sm text-gray-700 dark:text-gray-300">
+                <div className="text-sm text-gray-700 dark:text-gray-300 max-h-32 overflow-y-auto whitespace-pre-line">
                   {result.backstorySummary}
-                </p>
+                </div>
               </div>
             )}
 
