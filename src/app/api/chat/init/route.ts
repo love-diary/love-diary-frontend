@@ -74,19 +74,28 @@ export async function POST(request: NextRequest) {
 
     console.log(`✅ Agent created successfully for character ${tokenId}`);
     return NextResponse.json(result);
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('❌ Chat init error:', error);
 
+    // Type guard for error with statusCode and message
+    const isServiceError = (err: unknown): err is { statusCode?: number; message?: string; details?: unknown } => {
+      return typeof err === 'object' && err !== null;
+    };
+
+    const serviceError = isServiceError(error) ? error : {};
+    const statusCode = serviceError.statusCode || 500;
+    const errorMessage = serviceError.message || 'Unknown error';
+
     // Log detailed error information
-    if (error.statusCode) {
-      console.error(`   Status code: ${error.statusCode}`);
+    if (serviceError.statusCode) {
+      console.error(`   Status code: ${serviceError.statusCode}`);
     }
-    if (error.details) {
-      console.error(`   Details:`, error.details);
+    if (serviceError.details) {
+      console.error(`   Details:`, serviceError.details);
     }
 
     // Handle specific errors
-    if (error.statusCode === 409) {
+    if (serviceError.statusCode === 409) {
       return NextResponse.json(
         { error: 'Agent already exists for this character' },
         { status: 409 }
@@ -94,11 +103,11 @@ export async function POST(request: NextRequest) {
     }
 
     // Agent service connection error
-    if (error.statusCode === 503 || error.statusCode === 504) {
+    if (serviceError.statusCode === 503 || serviceError.statusCode === 504) {
       return NextResponse.json(
         {
           error: 'Agent service unavailable',
-          details: error.message,
+          details: errorMessage,
           hint: 'Make sure AGENT_SERVICE_URL is configured and the agent service is running',
         },
         { status: 503 }
@@ -108,10 +117,10 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       {
         error: 'Failed to initialize chat',
-        details: error.message,
-        statusCode: error.statusCode,
+        details: errorMessage,
+        statusCode,
       },
-      { status: error.statusCode || 500 }
+      { status: statusCode }
     );
   }
 }

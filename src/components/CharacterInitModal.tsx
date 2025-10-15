@@ -42,7 +42,7 @@ export function CharacterInitModal({
       const generateBackstory = async () => {
         try {
           await initializeCharacter(tokenId, authToken, playerName, playerGender);
-        } catch (err) {
+        } catch {
           // Error is handled by the hook
         }
       };

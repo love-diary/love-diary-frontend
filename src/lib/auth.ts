@@ -87,10 +87,11 @@ export async function verifySiweMessage(
       valid: true,
       address: siweMessage.address,
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'Verification failed';
     return {
       valid: false,
-      error: error.message || 'Verification failed',
+      error: errorMessage,
     };
   }
 }
@@ -130,14 +131,26 @@ export async function verifyJWT(token: string): Promise<{ valid: boolean; payloa
     // Verify JWT signature and expiry
     const { payload } = await jwtVerify(token, JWT_SECRET);
 
+    // Validate payload has required fields
+    if (typeof payload.walletAddress !== 'string' ||
+        typeof payload.iat !== 'number' ||
+        typeof payload.exp !== 'number') {
+      return { valid: false, error: 'Invalid token payload' };
+    }
+
     return {
       valid: true,
-      payload: payload as JWTPayload,
+      payload: {
+        walletAddress: payload.walletAddress,
+        iat: payload.iat,
+        exp: payload.exp,
+      } as JWTPayload,
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'Invalid token';
     return {
       valid: false,
-      error: error.message || 'Invalid token',
+      error: errorMessage,
     };
   }
 }

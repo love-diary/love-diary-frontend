@@ -12,7 +12,7 @@ export async function GET() {
     await storeNonce(nonce);
 
     return NextResponse.json({ nonce });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Nonce generation error:', error);
     return NextResponse.json(
       { error: 'Failed to generate nonce' },

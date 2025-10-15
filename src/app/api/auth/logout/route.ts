@@ -20,7 +20,7 @@ export async function POST(request: NextRequest) {
     await invalidateJWT(token);
 
     return NextResponse.json({ success: true });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Logout error:', error);
     return NextResponse.json(
       { error: 'Logout failed' },

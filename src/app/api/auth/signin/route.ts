@@ -25,7 +25,7 @@ export async function POST(request: NextRequest) {
       signature
     );
 
-    if (!valid) {
+    if (!valid || !verifiedAddress) {
       return NextResponse.json(
         { error: error || 'Invalid signature' },
         { status: 401 }
@@ -33,7 +33,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Ensure address matches
-    if (verifiedAddress?.toLowerCase() !== address.toLowerCase()) {
+    if (verifiedAddress.toLowerCase() !== address.toLowerCase()) {
       return NextResponse.json(
         { error: 'Address mismatch' },
         { status: 401 }
@@ -49,10 +49,11 @@ export async function POST(request: NextRequest) {
       expiresAt,
       address: verifiedAddress,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Signin error:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     return NextResponse.json(
-      { error: 'Authentication failed', details: error.message },
+      { error: 'Authentication failed', details: errorMessage },
       { status: 500 }
     );
   }

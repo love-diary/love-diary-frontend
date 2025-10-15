@@ -60,10 +60,9 @@ async function agentServiceFetch(
 ): Promise<Response> {
   const url = `${AGENT_SERVICE_URL}${endpoint}`;
 
-  const headers: HeadersInit = {
+  const headers: Record<string, string> = {
     'Content-Type': 'application/json',
     'Authorization': `Bearer ${AGENT_SERVICE_SECRET}`,
-    ...options.headers,
   };
 
   if (playerAddress) {

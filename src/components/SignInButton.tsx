@@ -61,9 +61,10 @@ export function SignInButton({ onSignIn }: { onSignIn: () => void }) {
 
       // 6. Callback
       onSignIn();
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Sign in error:", err);
-      setError(err.message || "Failed to sign in");
+      const errorMessage = err instanceof Error ? err.message : "Failed to sign in";
+      setError(errorMessage);
     } finally {
       setIsSigningIn(false);
     }
