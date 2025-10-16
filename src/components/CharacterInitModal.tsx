@@ -12,7 +12,6 @@ interface CharacterInitModalProps {
   tokenId: number;
   characterName: string;
   authToken: string | null;
-  onComplete: () => void;
   onClose: () => void;
 }
 
@@ -20,7 +19,6 @@ export function CharacterInitModal({
   tokenId,
   characterName,
   authToken,
-  onComplete,
   onClose,
 }: CharacterInitModalProps) {
   const [playerName, setPlayerName] = useState('');
@@ -42,6 +40,8 @@ export function CharacterInitModal({
       const generateBackstory = async () => {
         try {
           await initializeCharacter(tokenId, authToken, playerName, playerGender);
+          // Save player name to localStorage for chat
+          localStorage.setItem('playerName', playerName);
         } catch {
           // Error is handled by the hook
         }
@@ -74,8 +74,8 @@ export function CharacterInitModal({
   };
 
   return (
-    <div className="absolute inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-10 rounded-lg">
-      <div className="bg-white dark:bg-gray-900 rounded-lg shadow-2xl max-w-md w-full mx-4 p-6">
+    <div className="w-full max-w-md">
+      <div className="bg-white dark:bg-gray-900 rounded-lg shadow-2xl p-6">
         {/* Header */}
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-xl font-bold">Bond with {characterName}</h3>
@@ -220,7 +220,7 @@ export function CharacterInitModal({
 
             {/* Start Chatting Button */}
             <button
-              onClick={onComplete}
+              onClick={() => window.location.reload()}
               className="w-full px-6 py-3 bg-gradient-to-r from-pink-500 to-purple-500 text-white font-medium rounded-lg
                        hover:from-pink-600 hover:to-purple-600 transition-all"
             >

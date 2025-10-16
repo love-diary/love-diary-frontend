@@ -39,6 +39,19 @@ export interface HealthResponse {
   uptime_seconds: number;
 }
 
+export interface CharacterInfoResponse {
+  affectionLevel: number;
+  backstory: string;
+  recentConversation: Array<{
+    sender: 'player' | 'character';
+    text: string;
+    timestamp: number;
+  }>;
+  totalMessages: number;
+  playerName: string;
+  playerGender: string;
+}
+
 class AgentServiceError extends Error {
   constructor(
     message: string,
@@ -73,14 +86,16 @@ async function agentServiceFetch(
     const response = await fetch(url, {
       ...options,
       headers,
-      // Add timeout (30 seconds for agent creation, 10 seconds for messages)
-      signal: AbortSignal.timeout(endpoint.includes('/create') ? 30000 : 10000),
+      // Add timeout (30 seconds for agent creation, 20 seconds for messages)
+      signal: AbortSignal.timeout(endpoint.includes('/create') ? 30000 : 20000),
     });
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
+      // FastAPI returns error in 'detail' field, not 'message'
+      const errorMessage = errorData.detail || errorData.message || errorData.error || `Agent service error: ${response.statusText}`;
       throw new AgentServiceError(
-        errorData.message || `Agent service error: ${response.statusText}`,
+        errorMessage,
         response.status,
         errorData
       );
@@ -93,8 +108,12 @@ async function agentServiceFetch(
     }
 
     // Network or timeout error
-    if (error.name === 'AbortError') {
-      throw new AgentServiceError('Agent service timeout', 504);
+    if (error.name === 'AbortError' || error.name === 'TimeoutError') {
+      const timeoutSeconds = endpoint.includes('/create') ? 30 : 20;
+      throw new AgentServiceError(
+        `Frontend → Agent Service timeout (>${timeoutSeconds}s)`,
+        504
+      );
     }
 
     throw new AgentServiceError(
@@ -137,6 +156,24 @@ export async function sendMessageToAgent(
     {
       method: 'POST',
       body: JSON.stringify(request),
+    },
+    playerAddress
+  );
+
+  return response.json();
+}
+
+/**
+ * Get character info (affection level, backstory, recent conversation)
+ */
+export async function getCharacterInfo(
+  characterId: number,
+  playerAddress: string
+): Promise<CharacterInfoResponse> {
+  const response = await agentServiceFetch(
+    `/agent/${characterId}/info`,
+    {
+      method: 'GET',
     },
     playerAddress
   );
