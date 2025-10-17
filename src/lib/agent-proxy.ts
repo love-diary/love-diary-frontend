@@ -10,6 +10,7 @@ const AGENT_SERVICE_SECRET = process.env.AGENT_SERVICE_SECRET || 'development-se
 export interface CreateAgentRequest {
   playerName: string;
   playerGender: string;
+  playerTimezone: number;
 }
 
 export interface CreateAgentResponse {
@@ -50,6 +51,17 @@ export interface CharacterInfoResponse {
   totalMessages: number;
   playerName: string;
   playerGender: string;
+}
+
+export interface DiaryListItem {
+  date: string;
+  messageCount: number;
+}
+
+export interface DiaryEntry {
+  date: string;
+  entry: string;
+  messageCount: number;
 }
 
 class AgentServiceError extends Error {
@@ -188,6 +200,43 @@ export async function checkAgentServiceHealth(): Promise<HealthResponse> {
   const response = await agentServiceFetch('/health', {
     method: 'GET',
   });
+
+  return response.json();
+}
+
+/**
+ * Get list of diary entries for a character
+ */
+export async function getDiaryList(
+  characterId: number,
+  playerAddress: string
+): Promise<DiaryListItem[]> {
+  const response = await agentServiceFetch(
+    `/agent/${characterId}/diary/list`,
+    {
+      method: 'GET',
+    },
+    playerAddress
+  );
+
+  return response.json();
+}
+
+/**
+ * Get specific diary entry by date
+ */
+export async function getDiaryEntry(
+  characterId: number,
+  playerAddress: string,
+  date: string
+): Promise<DiaryEntry> {
+  const response = await agentServiceFetch(
+    `/agent/${characterId}/diary/entry/${date}`,
+    {
+      method: 'GET',
+    },
+    playerAddress
+  );
 
   return response.json();
 }

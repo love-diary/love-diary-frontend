@@ -20,7 +20,8 @@ export function useCharacterInit() {
     tokenId: number,
     authToken: string,
     playerName: string,
-    playerGender: string
+    playerGender: string,
+    playerTimezone: number
   ) => {
     setIsInitializing(true);
     setError(null);
@@ -37,6 +38,7 @@ export function useCharacterInit() {
           tokenId,
           playerName,
           playerGender,
+          playerTimezone,
         }),
       });
 

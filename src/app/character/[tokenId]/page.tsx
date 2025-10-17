@@ -15,6 +15,7 @@ import Link from "next/link";
 import { CharacterInitModal } from "@/components/CharacterInitModal";
 import { SignInButton } from "@/components/SignInButton";
 import { BackstoryModal } from "@/components/BackstoryModal";
+import { DiaryPanel } from "@/components/DiaryPanel";
 import { useChat } from "@/hooks/useChat";
 import { useCharacterInfo } from "@/hooks/useCharacterInfo";
 
@@ -293,6 +294,16 @@ export default function CharacterPage() {
                 <div className="inline-block w-4 h-4 border-2 border-pink-500 border-t-transparent rounded-full animate-spin"></div>
                 <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">Loading info...</p>
               </div>
+            )}
+
+            {/* Diary Panel - Only show if bonded */}
+            {isBonded && tokenIdNumber !== null && (
+              <DiaryPanel
+                tokenId={tokenIdNumber}
+                authToken={authToken}
+                characterName={name}
+                enabled={!!isBonded}
+              />
             )}
 
             {/* Ownership Info */}

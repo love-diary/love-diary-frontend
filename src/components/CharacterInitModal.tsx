@@ -26,6 +26,9 @@ export function CharacterInitModal({
   const [bondComplete, setBondComplete] = useState(false);
   const { initializeCharacter, isInitializing, error, result } = useCharacterInit();
 
+  // Auto-detect user timezone (UTC offset in hours)
+  const playerTimezone = -new Date().getTimezoneOffset() / 60;
+
   // Contract write for bond()
   const { writeContract, data: bondTxHash, isPending: isBondPending, error: bondError } = useWriteContract();
   const { isLoading: isBondConfirming, isSuccess: isBondSuccess } = useWaitForTransactionReceipt({
@@ -39,7 +42,7 @@ export function CharacterInitModal({
 
       const generateBackstory = async () => {
         try {
-          await initializeCharacter(tokenId, authToken, playerName, playerGender);
+          await initializeCharacter(tokenId, authToken, playerName, playerGender, playerTimezone);
           // Save player name to localStorage for chat
           localStorage.setItem('playerName', playerName);
         } catch {
@@ -49,7 +52,7 @@ export function CharacterInitModal({
 
       generateBackstory();
     }
-  }, [isBondSuccess, bondComplete, authToken, tokenId, playerName, playerGender, initializeCharacter]);
+  }, [isBondSuccess, bondComplete, authToken, tokenId, playerName, playerGender, playerTimezone, initializeCharacter]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
