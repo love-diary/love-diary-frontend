@@ -16,8 +16,11 @@ import { CharacterInitModal } from "@/components/CharacterInitModal";
 import { SignInButton } from "@/components/SignInButton";
 import { BackstoryModal } from "@/components/BackstoryModal";
 import { DiaryPanel } from "@/components/DiaryPanel";
+import { InlineGiftSelector } from "@/components/InlineGiftSelector";
 import { useChat } from "@/hooks/useChat";
 import { useCharacterInfo } from "@/hooks/useCharacterInfo";
+import { useCharacterWallet } from "@/hooks/useCharacterWallet";
+import { formatEther } from "viem";
 
 export default function CharacterPage() {
   const params = useParams();
@@ -29,6 +32,7 @@ export default function CharacterPage() {
   const [messageInput, setMessageInput] = useState("");
   const [playerName, setPlayerName] = useState("Player");
   const [showBackstoryModal, setShowBackstoryModal] = useState(false);
+  const [showGiftSelector, setShowGiftSelector] = useState(false);
   const [currentAffection, setCurrentAffection] = useState(10);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -63,7 +67,7 @@ export default function CharacterPage() {
   });
 
   // Initialize chat hook
-  const { messages, sendMessage, isSending, error: chatError, setInitialMessages } = useChat(
+  const { messages, sendMessage, isSending, error: chatError, setInitialMessages, addMessage } = useChat(
     tokenIdNumber || 0,
     playerName || "Player"
   );
@@ -88,6 +92,13 @@ export default function CharacterPage() {
       setCurrentAffection(characterInfo.affectionLevel);
     }
   }, [characterInfo?.affectionLevel]);
+
+  // Fetch character wallet info
+  const { wallet, isLoading: isLoadingWallet, refetch: refetchWallet } = useCharacterWallet(
+    tokenIdNumber,
+    authToken,
+    !!isBonded
+  );
 
   // Load initial messages from characterInfo when available
   useEffect(() => {
@@ -168,6 +179,35 @@ export default function CharacterPage() {
       e.preventDefault();
       handleSendMessage();
     }
+  };
+
+  // Handle gift success
+  const handleGiftSuccess = (affectionChange: number, characterMessage: string, giftAmount: number) => {
+    setCurrentAffection(prev => Math.max(0, Math.min(1000, prev + affectionChange)));
+
+    // Add player's gift message to chat
+    const playerGiftMessage = {
+      sender: "player" as const,
+      text: `🎁 Sent ${giftAmount} LOVE`,
+      timestamp: Date.now(),
+    };
+    addMessage(playerGiftMessage);
+
+    // Add character's response to chat after a short delay
+    setTimeout(() => {
+      const characterResponseMessage = {
+        sender: "character" as const,
+        text: characterMessage,
+        timestamp: Date.now(),
+        affectionChange: affectionChange,
+      };
+      addMessage(characterResponseMessage);
+    }, 500);
+
+    // Wait 3 seconds before refetching to allow RPC to update balance
+    setTimeout(() => {
+      refetchWallet();
+    }, 3000);
   };
 
   // Get localized trait names (currently only "en")
@@ -273,6 +313,38 @@ export default function CharacterPage() {
                     {characterInfo.totalMessages} messages
                   </p>
                 </div>
+
+                {/* Wallet Balance */}
+                {wallet && (
+                  <div className="mb-4">
+                    <h3 className="font-semibold text-sm mb-2 text-green-500">Wallet</h3>
+                    <div className="bg-green-50 dark:bg-green-900/20 rounded-lg p-3 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs text-gray-600 dark:text-gray-400">Balance:</span>
+                        <span className="text-sm font-bold text-green-700 dark:text-green-300">
+                          {formatEther(wallet.loveBalance)} LOVE
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-xs text-gray-600 dark:text-gray-400">Address:</span>
+                        <div className="flex items-center gap-1 mt-1">
+                          <code className="text-xs font-mono bg-white dark:bg-gray-800 px-2 py-1 rounded flex-1 truncate">
+                            {wallet.walletAddress}
+                          </code>
+                          <a
+                            href={`https://sepolia.basescan.org/address/${wallet.walletAddress}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-green-600 hover:text-green-700 dark:text-green-400 dark:hover:text-green-300 text-xs"
+                            title="View on Basescan"
+                          >
+                            ↗
+                          </a>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
 
                 {/* Backstory - Clickable */}
                 <div className="mb-4">
@@ -441,6 +513,18 @@ export default function CharacterPage() {
                       className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg
                                bg-white dark:bg-gray-700 focus:ring-2 focus:ring-pink-500"
                     />
+                    {/* Gift Button */}
+                    {wallet && (
+                      <button
+                        onClick={() => setShowGiftSelector(!showGiftSelector)}
+                        className="px-4 py-2 bg-pink-100 dark:bg-pink-900/30 text-pink-600 dark:text-pink-400 rounded-lg
+                                 hover:bg-pink-200 dark:hover:bg-pink-900/50 transition-all
+                                 flex items-center gap-1 text-sm font-medium"
+                        title="Send gift"
+                      >
+                        🎁
+                      </button>
+                    )}
                     <button
                       onClick={handleSendMessage}
                       disabled={!messageInput.trim() || isSending}
@@ -460,6 +544,17 @@ export default function CharacterPage() {
                     </button>
                   </div>
                 </div>
+
+                {/* Inline Gift Selector */}
+                {showGiftSelector && wallet && authToken && tokenIdNumber !== null && (
+                  <InlineGiftSelector
+                    tokenId={tokenIdNumber}
+                    authToken={authToken}
+                    characterWallet={wallet.walletAddress}
+                    onClose={() => setShowGiftSelector(false)}
+                    onSuccess={handleGiftSuccess}
+                  />
+                )}
               </>
             )}
           </div>

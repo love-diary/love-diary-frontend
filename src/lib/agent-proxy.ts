@@ -64,6 +64,18 @@ export interface DiaryEntry {
   messageCount: number;
 }
 
+export interface WalletInfo {
+  walletAddress: string;
+  loveBalance: string;  // Balance in wei as string
+}
+
+export interface GiftResult {
+  status: 'success' | 'failed';
+  affectionChange: number;
+  newAffectionLevel: number;
+  message: string;
+}
+
 class AgentServiceError extends Error {
   constructor(
     message: string,
@@ -234,6 +246,45 @@ export async function getDiaryEntry(
     `/agent/${characterId}/diary/entry/${date}`,
     {
       method: 'GET',
+    },
+    playerAddress
+  );
+
+  return response.json();
+}
+
+/**
+ * Get character wallet info (address and LOVE balance)
+ */
+export async function getCharacterWallet(
+  characterId: number,
+  playerAddress: string
+): Promise<WalletInfo> {
+  const response = await agentServiceFetch(
+    `/agent/${characterId}/wallet`,
+    {
+      method: 'GET',
+    },
+    playerAddress
+  );
+
+  return response.json();
+}
+
+/**
+ * Verify LOVE token gift transaction
+ */
+export async function verifyGift(
+  characterId: number,
+  playerAddress: string,
+  txHash: string,
+  amount: number
+): Promise<GiftResult> {
+  const response = await agentServiceFetch(
+    `/agent/${characterId}/gift`,
+    {
+      method: 'POST',
+      body: JSON.stringify({ txHash, amount }),
     },
     playerAddress
   );
