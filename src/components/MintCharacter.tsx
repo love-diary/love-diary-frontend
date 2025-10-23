@@ -155,6 +155,22 @@ export function MintCharacter() {
     }
   }, [isMintSuccess, mintReceipt]);
 
+  // Generate character image after mint succeeds
+  useEffect(() => {
+    if (mintedTokenId !== null) {
+      console.log("=== GENERATING CHARACTER IMAGE ===");
+      console.log("Token ID:", mintedTokenId);
+
+      // Trigger image generation via API route (non-blocking)
+      fetch(`/api/character/${mintedTokenId}/generate-image`, {
+        method: 'POST',
+      }).catch((error) => {
+        console.error('Failed to trigger image generation:', error);
+        // Don't fail the UI - image is optional
+      });
+    }
+  }, [mintedTokenId]);
+
   // Refetch balances when mint succeeds
   useEffect(() => {
     if (isMintSuccess) {

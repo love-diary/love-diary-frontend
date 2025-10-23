@@ -14,6 +14,7 @@ interface CharacterData {
   personalityId: number;
   birthTimestamp: number;
   isBonded: boolean;
+  imageUrl?: string;
 }
 
 export function CharacterList() {
@@ -99,6 +100,80 @@ export function CharacterList() {
     fetchOwnedCharacters();
   }, [address, publicClient, totalSupply]);
 
+  // Check for character images and trigger backfill
+  useEffect(() => {
+    if (ownedCharacters.length === 0) return;
+
+    // Check if all characters already have images
+    const allHaveImages = ownedCharacters.every(char => char.imageUrl);
+    if (allHaveImages) {
+      console.log('All characters have images, stopping polling');
+      return; // No need to poll
+    }
+
+    const triggeredBackfill = new Set<number>();
+
+    const checkImages = async () => {
+      const updatedCharacters = await Promise.all(
+        ownedCharacters.map(async (character) => {
+          // Skip if already has image
+          if (character.imageUrl) return character;
+
+          const imgUrl = `https://agents.lovediary.io/character-images/${character.tokenId}.png`;
+
+          try {
+            const response = await fetch(imgUrl, { method: 'HEAD' });
+            if (response.ok) {
+              console.log(`Character ${character.tokenId} image found`);
+              return { ...character, imageUrl: imgUrl };
+            } else if (!triggeredBackfill.has(character.tokenId)) {
+              // Image doesn't exist - trigger backfill generation
+              console.log(`Triggering image generation for character ${character.tokenId}`);
+              triggeredBackfill.add(character.tokenId);
+
+              fetch(`/api/character/${character.tokenId}/generate-image`, {
+                method: 'POST',
+              }).catch((error) => {
+                console.error(`Failed to trigger image generation for ${character.tokenId}:`, error);
+              });
+            }
+          } catch (error) {
+            // Network error - maybe trigger backfill
+            if (!triggeredBackfill.has(character.tokenId)) {
+              console.log(`Image check failed for character ${character.tokenId}, triggering generation`);
+              triggeredBackfill.add(character.tokenId);
+
+              fetch(`/api/character/${character.tokenId}/generate-image`, {
+                method: 'POST',
+              }).catch((err) => {
+                console.error(`Failed to trigger image generation for ${character.tokenId}:`, err);
+              });
+            }
+          }
+
+          return character;
+        })
+      );
+
+      // Only update if something changed
+      const hasChanges = updatedCharacters.some((char, idx) =>
+        char.imageUrl !== ownedCharacters[idx].imageUrl
+      );
+
+      if (hasChanges) {
+        setOwnedCharacters(updatedCharacters);
+      }
+    };
+
+    // Check immediately
+    checkImages();
+
+    // Then check every 30 seconds
+    const intervalId = setInterval(checkImages, 30000);
+
+    return () => clearInterval(intervalId);
+  }, [ownedCharacters]);
+
   if (!isConnected) {
     return (
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 text-center">
@@ -174,14 +249,26 @@ export function CharacterList() {
                 href={`/character/${character.tokenId}`}
                 className="block bg-gray-50 dark:bg-gray-700 rounded-lg p-4 hover:shadow-lg transition cursor-pointer"
               >
-                <div className="flex items-start justify-between mb-3">
-                  <div>
-                    <h4 className="font-bold text-lg">{character.name}</h4>
+                <div className="flex items-start gap-3 mb-3">
+                  {/* Character Image */}
+                  {character.imageUrl ? (
+                    <img
+                      src={character.imageUrl}
+                      alt={character.name}
+                      className="w-16 h-16 object-cover rounded-lg flex-shrink-0"
+                    />
+                  ) : (
+                    <div className="w-16 h-16 bg-gradient-to-br from-pink-100 to-purple-100 dark:from-pink-900/20 dark:to-purple-900/20 flex items-center justify-center rounded-lg flex-shrink-0">
+                      <span className="text-2xl">🎨</span>
+                    </div>
+                  )}
+
+                  <div className="flex-1 min-w-0 text-right">
+                    <h4 className="font-bold text-lg truncate">{character.name}</h4>
                     <p className="text-xs text-gray-500 dark:text-gray-400">
                       Token #{character.tokenId}
                     </p>
                   </div>
-                  <div className="text-3xl">🎭</div>
                 </div>
                 <div className="space-y-1 text-sm">
                   <div className="flex justify-between">

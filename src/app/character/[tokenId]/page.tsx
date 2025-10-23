@@ -35,6 +35,9 @@ export default function CharacterPage() {
   const [showGiftSelector, setShowGiftSelector] = useState(false);
   const [currentAffection, setCurrentAffection] = useState(10);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [imageLoaded, setImageLoaded] = useState(false);
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [isCardFlipped, setIsCardFlipped] = useState(false);
 
   // Load auth token from localStorage
   useEffect(() => {
@@ -73,7 +76,7 @@ export default function CharacterPage() {
   );
 
   // Fetch character info when bonded
-  const { characterInfo, isLoading: isLoadingCharacterInfo } = useCharacterInfo(
+  const { characterInfo, isLoading: isLoadingCharacterInfo, refetch: refetchCharacterInfo } = useCharacterInfo(
     tokenIdNumber,
     authToken,
     !!isBonded
@@ -92,6 +95,79 @@ export default function CharacterPage() {
       setCurrentAffection(characterInfo.affectionLevel);
     }
   }, [characterInfo?.affectionLevel]);
+
+  // Poll for character image (works for both bonded and unbonded characters)
+  useEffect(() => {
+    if (!tokenIdNumber) {
+      return; // Don't poll if no tokenId
+    }
+
+    // If image already loaded, don't poll
+    if (imageLoaded) {
+      return;
+    }
+
+    // Try to load image from characterInfo first (if bonded)
+    if (characterInfo?.imageUrl) {
+      setImageUrl(characterInfo.imageUrl);
+      setImageLoaded(true);
+      return; // Stop here - no need to poll
+    }
+
+    // Trigger backfill generation on first load (if image doesn't exist)
+    let hasTriggeredBackfill = false;
+
+    // Check if image file exists and trigger backfill if needed
+    const checkImage = async () => {
+      // If image was loaded during this interval, stop
+      if (imageLoaded) {
+        return;
+      }
+
+      const imgUrl = `https://agents.lovediary.io/character-images/${tokenIdNumber}.png`;
+
+      try {
+        const response = await fetch(imgUrl, { method: 'HEAD' });
+        if (response.ok) {
+          console.log('Character image found!');
+          setImageUrl(imgUrl);
+          setImageLoaded(true); // This will trigger cleanup of interval
+        } else if (!hasTriggeredBackfill) {
+          // Image doesn't exist - trigger generation
+          console.log('Image not found, triggering backfill generation...');
+          hasTriggeredBackfill = true;
+
+          fetch(`/api/character/${tokenIdNumber}/generate-image`, {
+            method: 'POST',
+          }).catch((error) => {
+            console.error('Failed to trigger image generation:', error);
+          });
+        }
+      } catch (error) {
+        // Image not ready yet, will retry
+        if (!hasTriggeredBackfill) {
+          // Trigger backfill on first failure too
+          console.log('Image check failed, triggering backfill generation...');
+          hasTriggeredBackfill = true;
+
+          fetch(`/api/character/${tokenIdNumber}/generate-image`, {
+            method: 'POST',
+          }).catch((err) => {
+            console.error('Failed to trigger image generation:', err);
+          });
+        }
+      }
+    };
+
+    // Check immediately
+    checkImage();
+
+    // Then poll every 30 seconds if not loaded
+    const intervalId = setInterval(checkImage, 30000);
+
+    // Cleanup interval when component unmounts OR when image is loaded
+    return () => clearInterval(intervalId);
+  }, [tokenIdNumber, characterInfo, imageLoaded]);
 
   // Fetch character wallet info
   const { wallet, isLoading: isLoadingWallet, refetch: refetchWallet } = useCharacterWallet(
@@ -239,156 +315,209 @@ export default function CharacterPage() {
         {/* Split Layout - 20/80 */}
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 min-h-[calc(100vh-12rem)]">
           {/* Left Panel - Character Card (20%) */}
-          <div className="lg:col-span-1 bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 h-fit lg:sticky lg:top-6">
-            {/* Character Header */}
-            <div className="text-center mb-4">
-              <div className="text-4xl mb-2">🎭</div>
-              <div className="flex items-center justify-center gap-2 mb-1">
-                <h2 className="text-xl font-bold">{name}</h2>
-                {isBonded ? (
-                  <span className="bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200 px-2 py-0.5 rounded-full text-xs font-semibold">
-                    Bonded
-                  </span>
-                ) : (
-                  <span className="bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 px-2 py-0.5 rounded-full text-xs font-semibold">
-                    New
-                  </span>
-                )}
-              </div>
-              <p className="text-xs text-gray-600 dark:text-gray-400">
-                Born {birthDate.toLocaleDateString(locale, { year: 'numeric', month: 'long', day: 'numeric' })}
-              </p>
-            </div>
-
-            {/* Basic Info */}
-            <div className="mb-4">
-              <h3 className="font-semibold text-sm mb-2 text-pink-500">Basic Info</h3>
-              <div className="space-y-1.5 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-gray-600 dark:text-gray-400 text-xs">Gender:</span>
-                  <span className="font-medium text-xs">{genderLabel}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600 dark:text-gray-400 text-xs">Orientation:</span>
-                  <span className="font-medium text-xs">{orientationLabel}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600 dark:text-gray-400 text-xs">Language:</span>
-                  <span className="font-medium text-xs">{languageLabel}</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Traits */}
-            <div className="mb-4">
-              <h3 className="font-semibold text-sm mb-2 text-purple-500">Traits</h3>
-              <div className="space-y-1.5 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-gray-600 dark:text-gray-400 text-xs">Occupation:</span>
-                  <span className="font-medium text-xs">{occupationName}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600 dark:text-gray-400 text-xs">Personality:</span>
-                  <span className="font-medium text-xs">{personalityName}</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Character Info - Only show if bonded */}
-            {isBonded && characterInfo && (
-              <>
-                {/* Affection Level */}
-                <div className="mb-4">
-                  <h3 className="font-semibold text-sm mb-2 text-red-500">Affection</h3>
-                  <div className="flex items-center gap-2">
-                    <div className="flex-1 bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-                      <div
-                        className="bg-gradient-to-r from-pink-500 to-red-500 h-2 rounded-full transition-all"
-                        style={{ width: `${Math.min(100, (currentAffection / 100) * 100)}%` }}
-                      ></div>
-                    </div>
-                    <span className="text-xs font-medium">{currentAffection}</span>
-                  </div>
-                  <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
-                    {characterInfo.totalMessages} messages
-                  </p>
-                </div>
-
-                {/* Wallet Balance */}
-                {wallet && (
-                  <div className="mb-4">
-                    <h3 className="font-semibold text-sm mb-2 text-green-500">Wallet</h3>
-                    <div className="bg-green-50 dark:bg-green-900/20 rounded-lg p-3 space-y-2">
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs text-gray-600 dark:text-gray-400">Balance:</span>
-                        <span className="text-sm font-bold text-green-700 dark:text-green-300">
-                          {formatEther(wallet.loveBalance)} LOVE
-                        </span>
+          <div className="lg:col-span-1 h-fit lg:sticky lg:top-6 space-y-4">
+            {/* Flippable Card - Image & Info */}
+            <div
+              className="relative cursor-pointer"
+              style={{ perspective: '1000px' }}
+              onClick={() => setIsCardFlipped(!isCardFlipped)}
+            >
+              <div
+                className="relative w-full transition-transform duration-500"
+                style={{
+                  transformStyle: 'preserve-3d',
+                  transform: isCardFlipped ? 'rotateY(180deg)' : 'rotateY(0deg)',
+                  minHeight: '600px'
+                }}
+              >
+                {/* Front - Character Image */}
+                <div
+                  className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4"
+                  style={{ backfaceVisibility: 'hidden' }}
+                >
+                  <div className="text-center mb-3">
+                    {/* Character Image */}
+                    {imageUrl ? (
+                      <img
+                        src={imageUrl}
+                        alt={name}
+                        className="w-full h-64 object-cover rounded-lg mb-3 shadow-md"
+                      />
+                    ) : (
+                      <div className="w-full h-64 bg-gradient-to-br from-pink-100 to-purple-100 dark:from-pink-900/20 dark:to-purple-900/20 flex flex-col items-center justify-center rounded-lg mb-3">
+                        <div className="text-3xl mb-2">🎨</div>
+                        <span className="text-xs text-gray-600 dark:text-gray-400 px-3 text-center">Generating portrait...</span>
                       </div>
-                      <div>
-                        <span className="text-xs text-gray-600 dark:text-gray-400">Address:</span>
-                        <div className="flex items-center gap-1 mt-1">
-                          <code className="text-xs font-mono bg-white dark:bg-gray-800 px-2 py-1 rounded flex-1 truncate">
-                            {wallet.walletAddress}
-                          </code>
-                          <a
-                            href={`https://sepolia.basescan.org/address/${wallet.walletAddress}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-green-600 hover:text-green-700 dark:text-green-400 dark:hover:text-green-300 text-xs"
-                            title="View on Basescan"
-                          >
-                            ↗
-                          </a>
+                    )}
+                    <div className="flex items-center justify-center gap-2 mb-1">
+                      <h2 className="text-xl font-bold">{name}</h2>
+                      {isBonded ? (
+                        <span className="bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200 px-2 py-0.5 rounded-full text-xs font-semibold">
+                          Bonded
+                        </span>
+                      ) : (
+                        <span className="bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 px-2 py-0.5 rounded-full text-xs font-semibold">
+                          New
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-xs text-gray-600 dark:text-gray-400 mb-2">
+                      Born {birthDate.toLocaleDateString(locale, { year: 'numeric', month: 'long', day: 'numeric' })}
+                    </p>
+                    <p className="text-xs text-pink-500 dark:text-pink-400">
+                      Click to view details →
+                    </p>
+                  </div>
+
+                  {/* Affection Level - Front side */}
+                  {isBonded && characterInfo && (
+                    <div className="mb-3 border-t border-gray-200 dark:border-gray-700 pt-3">
+                      <h3 className="font-semibold text-sm mb-2 text-red-500">Affection</h3>
+                      <div className="flex items-center gap-2">
+                        <div className="flex-1 bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                          <div
+                            className="bg-gradient-to-r from-pink-500 to-red-500 h-2 rounded-full transition-all"
+                            style={{ width: `${Math.min(100, (currentAffection / 100) * 100)}%` }}
+                          ></div>
+                        </div>
+                        <span className="text-xs font-medium">{currentAffection}</span>
+                      </div>
+                      <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
+                        {characterInfo.totalMessages} messages
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Diary Panel - Front side */}
+                  {isBonded && tokenIdNumber !== null && (
+                    <div
+                      className="border-t border-gray-200 dark:border-gray-700 pt-3"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <DiaryPanel
+                        tokenId={tokenIdNumber}
+                        authToken={authToken}
+                        characterName={name}
+                        enabled={!!isBonded}
+                      />
+                    </div>
+                  )}
+                </div>
+
+                {/* Back - Character Info */}
+                <div
+                  className="absolute inset-0 bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 overflow-y-auto"
+                  style={{
+                    backfaceVisibility: 'hidden',
+                    transform: 'rotateY(180deg)',
+                    minHeight: '600px'
+                  }}
+                >
+                  <div className="text-center mb-3">
+                    <h2 className="text-lg font-bold">{name}</h2>
+                    <p className="text-xs text-pink-500 dark:text-pink-400 mb-2">
+                      ← Click to view image
+                    </p>
+                  </div>
+
+                  {/* Basic Info */}
+                  <div className="mb-3">
+                    <h3 className="font-semibold text-sm mb-2 text-pink-500">Basic Info</h3>
+                    <div className="space-y-1.5 text-sm">
+                      <div className="flex justify-between">
+                        <span className="text-gray-600 dark:text-gray-400 text-xs">Gender:</span>
+                        <span className="font-medium text-xs">{genderLabel}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600 dark:text-gray-400 text-xs">Orientation:</span>
+                        <span className="font-medium text-xs">{orientationLabel}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600 dark:text-gray-400 text-xs">Language:</span>
+                        <span className="font-medium text-xs">{languageLabel}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Traits */}
+                  <div className="mb-3">
+                    <h3 className="font-semibold text-sm mb-2 text-purple-500">Traits</h3>
+                    <div className="space-y-1.5 text-sm">
+                      <div className="flex justify-between">
+                        <span className="text-gray-600 dark:text-gray-400 text-xs">Occupation:</span>
+                        <span className="font-medium text-xs">{occupationName}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600 dark:text-gray-400 text-xs">Personality:</span>
+                        <span className="font-medium text-xs">{personalityName}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Ownership Info */}
+                  <div className="mb-3 pb-3 border-b border-gray-200 dark:border-gray-700">
+                    <h3 className="font-semibold text-sm mb-2">Ownership</h3>
+                    <div className="space-y-1.5 text-xs">
+                      <div className="flex flex-col gap-1">
+                        <span className="text-gray-600 dark:text-gray-400">Owner:</span>
+                        <span className="font-mono break-all text-xs">{owner}</span>
+                      </div>
+                      <div className="flex flex-col gap-1">
+                        <span className="text-gray-600 dark:text-gray-400">Minted:</span>
+                        <span className="font-medium">{mintDate.toLocaleDateString()}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Wallet Balance - Back side */}
+                  {isBonded && wallet && (
+                    <div className="mb-3 pb-3 border-b border-gray-200 dark:border-gray-700">
+                      <h3 className="font-semibold text-sm mb-2 text-green-500">Wallet</h3>
+                      <div className="bg-green-50 dark:bg-green-900/20 rounded-lg p-3 space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs text-gray-600 dark:text-gray-400">Balance:</span>
+                          <span className="text-sm font-bold text-green-700 dark:text-green-300">
+                            {formatEther(wallet.loveBalance)} LOVE
+                          </span>
+                        </div>
+                        <div>
+                          <span className="text-xs text-gray-600 dark:text-gray-400">Address:</span>
+                          <div className="flex items-center gap-1 mt-1">
+                            <code className="text-xs font-mono bg-white dark:bg-gray-800 px-2 py-1 rounded flex-1 truncate">
+                              {wallet.walletAddress}
+                            </code>
+                            <a
+                              href={`https://sepolia.basescan.org/address/${wallet.walletAddress}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-green-600 hover:text-green-700 dark:text-green-400 dark:hover:text-green-300 text-xs"
+                              title="View on Basescan"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              ↗
+                            </a>
+                          </div>
                         </div>
                       </div>
                     </div>
-                  </div>
-                )}
+                  )}
 
-                {/* Backstory - Clickable */}
-                <div className="mb-4">
-                  <h3 className="font-semibold text-sm mb-2 text-blue-500">Backstory</h3>
-                  <button
-                    onClick={() => setShowBackstoryModal(true)}
-                    className="w-full px-3 py-2 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 rounded-lg
-                             hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-all text-xs text-left"
-                  >
-                    Click to read {name}&apos;s story
-                  </button>
-                </div>
-              </>
-            )}
-
-            {/* Loading state */}
-            {isBonded && isLoadingCharacterInfo && (
-              <div className="mb-4 text-center">
-                <div className="inline-block w-4 h-4 border-2 border-pink-500 border-t-transparent rounded-full animate-spin"></div>
-                <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">Loading info...</p>
-              </div>
-            )}
-
-            {/* Diary Panel - Only show if bonded */}
-            {isBonded && tokenIdNumber !== null && (
-              <DiaryPanel
-                tokenId={tokenIdNumber}
-                authToken={authToken}
-                characterName={name}
-                enabled={!!isBonded}
-              />
-            )}
-
-            {/* Ownership Info */}
-            <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
-              <h3 className="font-semibold text-sm mb-2">Ownership</h3>
-              <div className="space-y-1.5 text-xs">
-                <div className="flex flex-col gap-1">
-                  <span className="text-gray-600 dark:text-gray-400">Owner:</span>
-                  <span className="font-mono break-all">{owner}</span>
-                </div>
-                <div className="flex flex-col gap-1">
-                  <span className="text-gray-600 dark:text-gray-400">Minted:</span>
-                  <span className="font-medium">{mintDate.toLocaleDateString()}</span>
+                  {/* Backstory - Back side */}
+                  {isBonded && characterInfo && (
+                    <div>
+                      <h3 className="font-semibold text-sm mb-2 text-blue-500">Backstory</h3>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setShowBackstoryModal(true);
+                        }}
+                        className="w-full px-3 py-2 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 rounded-lg
+                                 hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-all text-xs text-left"
+                      >
+                        Click to read {name}&apos;s story
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

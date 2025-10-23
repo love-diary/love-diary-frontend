@@ -51,6 +51,7 @@ export interface CharacterInfoResponse {
   totalMessages: number;
   playerName: string;
   playerGender: string;
+  imageUrl?: string;
 }
 
 export interface DiaryListItem {
@@ -107,11 +108,18 @@ async function agentServiceFetch(
   }
 
   try {
+    // Set timeout based on endpoint type
+    let timeoutMs = 20000; // default 20s
+    if (endpoint.includes('/create')) {
+      timeoutMs = 30000; // 30s for agent creation
+    } else if (endpoint.includes('/generate-image')) {
+      timeoutMs = 30000; // 30s for DALL-E 3 image generation
+    }
+
     const response = await fetch(url, {
       ...options,
       headers,
-      // Add timeout (30 seconds for agent creation, 20 seconds for messages)
-      signal: AbortSignal.timeout(endpoint.includes('/create') ? 30000 : 20000),
+      signal: AbortSignal.timeout(timeoutMs),
     });
 
     if (!response.ok) {
@@ -133,7 +141,10 @@ async function agentServiceFetch(
 
     // Network or timeout error
     if (error.name === 'AbortError' || error.name === 'TimeoutError') {
-      const timeoutSeconds = endpoint.includes('/create') ? 30 : 20;
+      let timeoutSeconds = 20;
+      if (endpoint.includes('/create') || endpoint.includes('/generate-image')) {
+        timeoutSeconds = 30;
+      }
       throw new AgentServiceError(
         `Frontend → Agent Service timeout (>${timeoutSeconds}s)`,
         504
@@ -324,6 +335,33 @@ export async function withRetry<T>(
   }
 
   throw lastError || new Error('Max retries exceeded');
+}
+
+/**
+ * Generate character image (called after minting)
+ */
+export async function generateCharacterImage(
+  characterId: number
+): Promise<void> {
+  try {
+    const response = await agentServiceFetch(
+      `/character/${characterId}/generate-image`,
+      {
+        method: 'POST',
+      }
+    );
+
+    const result = await response.json();
+
+    if (result.status === 'failed') {
+      console.error('Character image generation failed:', result.message);
+    } else {
+      console.log('Character image generated:', result.imageUrl);
+    }
+  } catch (error) {
+    // Don't throw - image generation is optional/non-blocking
+    console.error('Failed to generate character image:', error);
+  }
 }
 
 export { AgentServiceError };

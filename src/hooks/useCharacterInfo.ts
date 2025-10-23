@@ -15,6 +15,7 @@ export interface CharacterInfo {
   totalMessages: number;
   playerName: string;
   playerGender: string;
+  imageUrl?: string;
 }
 
 export function useCharacterInfo(tokenId: number | null, authToken: string | null, isBonded: boolean) {
