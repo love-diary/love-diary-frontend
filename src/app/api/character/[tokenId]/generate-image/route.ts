@@ -21,21 +21,20 @@ export async function POST(
     );
   }
 
-  console.log(`🎨 Starting background image generation for character ${tokenId}`);
+  console.log(`🎨 Starting image generation for character ${tokenId}`);
 
-  // Fire-and-forget: Start generation in background, return immediately
-  generateCharacterImage(tokenId)
-    .then(() => {
-      console.log(`✅ Image generated successfully for character ${tokenId}`);
-    })
-    .catch((error) => {
-      console.error(`❌ Image generation failed for character ${tokenId}:`, error);
-      // Don't throw - image is optional
-    });
+  // On Vercel, we need to await the call or it gets killed when function exits
+  // The agent service handles it in background, so this returns quickly
+  try {
+    await generateCharacterImage(tokenId);
+    console.log(`✅ Image generation request sent for character ${tokenId}`);
+  } catch (error) {
+    console.error(`❌ Image generation failed for character ${tokenId}:`, error);
+    // Don't throw - image is optional
+  }
 
-  // Return immediately without waiting
   return NextResponse.json({
     success: true,
-    message: 'Image generation started in background'
+    message: 'Image generation started'
   });
 }

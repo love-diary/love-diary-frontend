@@ -343,6 +343,9 @@ export async function withRetry<T>(
 export async function generateCharacterImage(
   characterId: number
 ): Promise<void> {
+  console.log(`[agent-proxy] Starting image generation for character ${characterId}`);
+  console.log(`[agent-proxy] AGENT_SERVICE_URL=${AGENT_SERVICE_URL}`);
+
   try {
     const response = await agentServiceFetch(
       `/character/${characterId}/generate-image`,
@@ -351,7 +354,9 @@ export async function generateCharacterImage(
       }
     );
 
+    console.log(`[agent-proxy] Got response:`, response.status);
     const result = await response.json();
+    console.log(`[agent-proxy] Result:`, result);
 
     if (result.status === 'failed') {
       console.error('Character image generation failed:', result.message);
@@ -360,7 +365,7 @@ export async function generateCharacterImage(
     }
   } catch (error) {
     // Don't throw - image generation is optional/non-blocking
-    console.error('Failed to generate character image:', error);
+    console.error('[agent-proxy] Failed to generate character image:', error);
   }
 }
 
