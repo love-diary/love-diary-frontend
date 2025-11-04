@@ -1,6 +1,9 @@
-import { FaucetClaim } from "@/components/FaucetClaim";
+"use client";
+
 import { CharacterList } from "@/components/CharacterList";
 import { GettingStarted } from "@/components/GettingStarted";
+import { LoveBalance } from "@/components/LoveBalance";
+import { ConnectButton } from "@rainbow-me/rainbowkit";
 import Link from "next/link";
 
 export default function Home() {
@@ -9,6 +12,9 @@ export default function Home() {
       <main className="container mx-auto px-4 py-16">
         {/* Header */}
         <div className="text-center mb-12">
+          <div className="flex justify-end mb-4">
+            <ConnectButton />
+          </div>
           <h1 className="text-5xl font-bold mb-4 bg-gradient-to-r from-pink-500 to-purple-500 bg-clip-text text-transparent">
             Love Diary
           </h1>
@@ -16,15 +22,15 @@ export default function Home() {
             AI-Powered Romance Game
           </p>
           <p className="mt-2 text-gray-500 dark:text-gray-400">
-            Claim your LOVE tokens to start your journey
+            Create your unique AI character on Base
           </p>
         </div>
 
         {/* Getting Started Instructions */}
         <GettingStarted />
 
-        {/* Faucet Component */}
-        <FaucetClaim />
+        {/* LOVE Balance Display */}
+        <LoveBalance />
 
         {/* Character List */}
         <div className="mt-12 max-w-2xl mx-auto">
@@ -38,7 +44,7 @@ export default function Home() {
               <div className="text-3xl mb-2">💖</div>
               <h3 className="font-bold mb-2">Get LOVE Tokens</h3>
               <p className="text-sm text-gray-600 dark:text-gray-400">
-                Claim 10,000 LOVE tokens every hour from the faucet
+                Purchase LOVE tokens from Uniswap to mint characters
               </p>
             </div>
             <Link href="/mint" className="block">
@@ -68,7 +74,7 @@ export default function Home() {
       {/* Footer */}
       <footer className="text-center py-8 text-gray-500 dark:text-gray-400 text-sm">
         <p>Built for ETH Global Hackathon</p>
-        <p className="mt-2">Base Sepolia Testnet</p>
+        <p className="mt-2">Base Mainnet</p>
       </footer>
     </div>
   );

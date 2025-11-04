@@ -40,62 +40,60 @@ export function GettingStarted() {
         <div className="px-6 pb-6 space-y-4 text-gray-700 dark:text-gray-300">
           <div>
             <h3 className="font-semibold text-lg mb-2 text-blue-800 dark:text-blue-200">
-              Step 1: Connect to Base Sepolia Network
+              Step 1: Connect to Base Mainnet
             </h3>
             <ol className="list-decimal list-inside space-y-2 ml-2">
-              <li>Open MetaMask and click the network dropdown at the top</li>
-              <li>Click &quot;Add Network&quot; or &quot;Add a network manually&quot;</li>
+              <li>Open your wallet and click the network dropdown</li>
+              <li>Select &quot;Base&quot; or add it manually:</li>
               <li>
-                Enter the following details:
+                Network details:
                 <div className="mt-2 ml-6 bg-white dark:bg-gray-800 p-3 rounded border border-gray-200 dark:border-gray-700 text-sm font-mono">
                   <div>
-                    <strong>Network Name:</strong> Base Sepolia
+                    <strong>Network Name:</strong> Base
                   </div>
                   <div>
-                    <strong>RPC URL:</strong> https://sepolia.base.org
+                    <strong>RPC URL:</strong> https://mainnet.base.org
                   </div>
                   <div>
-                    <strong>Chain ID:</strong> 84532
+                    <strong>Chain ID:</strong> 8453
                   </div>
                   <div>
                     <strong>Currency Symbol:</strong> ETH
                   </div>
                   <div>
-                    <strong>Block Explorer:</strong> https://sepolia.basescan.org
+                    <strong>Block Explorer:</strong> https://basescan.org
                   </div>
                 </div>
               </li>
-              <li>Click &quot;Save&quot; and switch to the Base Sepolia network</li>
+              <li>Switch to Base network</li>
             </ol>
           </div>
           <div>
             <h3 className="font-semibold text-lg mb-2 text-blue-800 dark:text-blue-200">
-              Step 2: Get Free Test ETH
+              Step 2: Get ETH on Base
             </h3>
             <p className="mb-2">
-              You need ETH on Base Sepolia to pay for gas fees:
+              You need ETH on Base to pay for gas fees:
             </p>
             <ol className="list-decimal list-inside space-y-2 ml-2">
-              <li>
-                Visit the{" "}
+              <li>Bridge ETH from Ethereum mainnet to Base using the official{" "}
                 <a
-                  href="https://www.alchemy.com/faucets/base-sepolia"
+                  href="https://bridge.base.org"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-blue-600 dark:text-blue-400 hover:underline font-semibold"
                 >
-                  Base Sepolia Faucet
+                  Base Bridge
                 </a>
               </li>
-              <li>Connect your wallet and request test ETH</li>
-              <li>Wait a few seconds for the ETH to arrive</li>
+              <li>Or buy ETH directly on Base via an exchange</li>
             </ol>
           </div>
           <div>
             <h3 className="font-semibold text-lg mb-2 text-blue-800 dark:text-blue-200">
-              Step 3: Claim LOVE Tokens
+              Step 3: Get LOVE Tokens
             </h3>
-            <p>Use the faucet below to claim 10,000 LOVE tokens every hour!</p>
+            <p>Purchase LOVE tokens from Uniswap to mint and interact with characters!</p>
           </div>
         </div>
       )}

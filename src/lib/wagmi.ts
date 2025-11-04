@@ -1,5 +1,5 @@
 import { getDefaultConfig } from '@rainbow-me/rainbowkit';
-import { baseSepolia } from 'wagmi/chains';
+import { base } from 'wagmi/chains';
 
 // Fallback for build time - you MUST set this in .env.local for the app to work
 const projectId = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || 'YOUR_PROJECT_ID_HERE';
@@ -11,6 +11,6 @@ if (projectId === 'YOUR_PROJECT_ID_HERE' && typeof window !== 'undefined') {
 export const config = getDefaultConfig({
   appName: 'Love Diary',
   projectId,
-  chains: [baseSepolia],
+  chains: [base],
   ssr: true,
 });
