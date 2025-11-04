@@ -28,7 +28,7 @@ export function SignInButton({ onSignIn }: { onSignIn: () => void }) {
         statement: "Sign in to Love Diary",
         uri: window.location.origin,
         version: "1",
-        chainId: 84532, // Base Sepolia
+        chainId: 8453, // Base Mainnet
         nonce,
         issuedAt: new Date().toISOString(),
       });
