@@ -7,7 +7,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { authenticateRequest } from '@/lib/auth';
 import { getDiaryEntry, withRetry } from '@/lib/agent-proxy';
 import { createPublicClient, http } from 'viem';
-import { baseSepolia } from 'viem/chains';
+import { base } from 'viem/chains';
 import { CHARACTER_NFT_ADDRESS, CHARACTER_NFT_ABI } from '@/lib/contracts';
 
 export async function GET(
@@ -45,8 +45,8 @@ export async function GET(
 
     // Create viem client
     const publicClient = createPublicClient({
-      chain: baseSepolia,
-      transport: http(process.env.BASE_RPC_URL || 'https://sepolia.base.org'),
+      chain: base,
+      transport: http(process.env.BASE_RPC_URL || 'https://mainnet.base.org'),
     });
 
     const nftContract = {

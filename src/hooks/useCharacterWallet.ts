@@ -20,7 +20,7 @@ export function useCharacterWallet(
   const [refreshKey, setRefreshKey] = useState(0);
 
   const fetchWallet = async () => {
-    if (!enabled || !tokenId || !authToken) {
+    if (!enabled || tokenId === null || tokenId === undefined || !authToken) {
       return;
     }
 

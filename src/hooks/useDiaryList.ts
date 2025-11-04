@@ -19,7 +19,7 @@ export function useDiaryList(
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!tokenId || !authToken || !enabled) {
+    if (tokenId === null || tokenId === undefined || !authToken || !enabled) {
       return;
     }
 

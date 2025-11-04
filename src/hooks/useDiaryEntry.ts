@@ -20,7 +20,7 @@ export function useDiaryEntry(
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!tokenId || !date || !authToken) {
+    if (tokenId === null || tokenId === undefined || !date || !authToken) {
       return;
     }
 

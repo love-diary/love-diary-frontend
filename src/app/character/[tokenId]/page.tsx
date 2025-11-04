@@ -76,7 +76,7 @@ export default function CharacterPage() {
   );
 
   // Fetch character info when bonded
-  const { characterInfo, isLoading: isLoadingCharacterInfo, refetch: refetchCharacterInfo } = useCharacterInfo(
+  const { characterInfo } = useCharacterInfo(
     tokenIdNumber,
     authToken,
     !!isBonded
@@ -98,7 +98,7 @@ export default function CharacterPage() {
 
   // Poll for character image (works for both bonded and unbonded characters)
   useEffect(() => {
-    if (!tokenIdNumber) {
+    if (tokenIdNumber === null || tokenIdNumber === undefined) {
       return; // Don't poll if no tokenId
     }
 
@@ -124,36 +124,35 @@ export default function CharacterPage() {
         return;
       }
 
-      const imgUrl = `https://agents.lovediary.io/character-images/${tokenIdNumber}.png`;
+      // Use env variable for dev, fallback to production URL
+      const baseUrl = process.env.NEXT_PUBLIC_CHARACTER_IMAGE_BASE_URL || 'https://agents.lovediary.io';
+      const imgUrl = `${baseUrl}/character-images/${tokenIdNumber}.png`;
 
       try {
         const response = await fetch(imgUrl, { method: 'HEAD' });
         if (response.ok) {
-          console.log('Character image found!');
           setImageUrl(imgUrl);
           setImageLoaded(true); // This will trigger cleanup of interval
         } else if (!hasTriggeredBackfill) {
           // Image doesn't exist - trigger generation
-          console.log('Image not found, triggering backfill generation...');
           hasTriggeredBackfill = true;
 
           fetch(`/api/character/${tokenIdNumber}/generate-image`, {
             method: 'POST',
-          }).catch((error) => {
-            console.error('Failed to trigger image generation:', error);
+          }).catch(() => {
+            // Silent fail - image generation is non-blocking
           });
         }
-      } catch (error) {
+      } catch {
         // Image not ready yet, will retry
         if (!hasTriggeredBackfill) {
           // Trigger backfill on first failure too
-          console.log('Image check failed, triggering backfill generation...');
           hasTriggeredBackfill = true;
 
           fetch(`/api/character/${tokenIdNumber}/generate-image`, {
             method: 'POST',
-          }).catch((err) => {
-            console.error('Failed to trigger image generation:', err);
+          }).catch(() => {
+            // Silent fail - image generation is non-blocking
           });
         }
       }
@@ -170,7 +169,7 @@ export default function CharacterPage() {
   }, [tokenIdNumber, characterInfo, imageLoaded]);
 
   // Fetch character wallet info
-  const { wallet, isLoading: isLoadingWallet, refetch: refetchWallet } = useCharacterWallet(
+  const { wallet, refetch: refetchWallet } = useCharacterWallet(
     tokenIdNumber,
     authToken,
     !!isBonded
@@ -487,7 +486,7 @@ export default function CharacterPage() {
                               {wallet.walletAddress}
                             </code>
                             <a
-                              href={`https://sepolia.basescan.org/address/${wallet.walletAddress}`}
+                              href={`https://basescan.org/address/${wallet.walletAddress}`}
                               target="_blank"
                               rel="noopener noreferrer"
                               className="text-green-600 hover:text-green-700 dark:text-green-400 dark:hover:text-green-300 text-xs"

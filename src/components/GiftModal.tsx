@@ -2,12 +2,11 @@
  * Modal for sending LOVE token gifts to character
  */
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAccount, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
 import { LOVE_TOKEN_ADDRESS, LOVE_TOKEN_ABI } from '@/lib/contracts';
-import { parseEther, formatEther } from 'viem';
+import { parseEther } from 'viem';
 import { createPortal } from 'react-dom';
-import { useEffect } from 'react';
 
 interface GiftModalProps {
   tokenId: number;

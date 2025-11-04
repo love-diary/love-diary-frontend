@@ -25,7 +25,7 @@ export function useCharacterInfo(tokenId: number | null, authToken: string | nul
 
   const fetchCharacterInfo = useCallback(async () => {
     // Don't fetch if prerequisites aren't met
-    if (!tokenId || !authToken || !isBonded) {
+    if (tokenId === null || tokenId === undefined || !authToken || !isBonded) {
       setCharacterInfo(null);
       setError(null);
       setIsLoading(false);

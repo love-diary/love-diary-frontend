@@ -137,7 +137,7 @@ export function CharacterList() {
                 console.error(`Failed to trigger image generation for ${character.tokenId}:`, error);
               });
             }
-          } catch (error) {
+          } catch {
             // Network error - maybe trigger backfill
             if (!triggeredBackfill.has(character.tokenId)) {
               console.log(`Image check failed for character ${character.tokenId}, triggering generation`);
