@@ -245,6 +245,7 @@ export default function CharacterPage() {
       console.error("Failed to send message:", error);
       // Restore message on error
       setMessageInput(message);
+      // Error is already set in useChat hook and will be displayed
     }
   };
 
@@ -655,7 +656,7 @@ export default function CharacterPage() {
                     )}
                     <button
                       onClick={handleSendMessage}
-                      disabled={!messageInput.trim() || isSending}
+                      disabled={!messageInput.trim() || !authToken || isSending}
                       className="px-6 py-2 bg-gradient-to-r from-pink-500 to-purple-500 text-white rounded-lg
                                hover:from-pink-600 hover:to-purple-600 transition-all
                                disabled:from-gray-400 disabled:to-gray-400 disabled:cursor-not-allowed
